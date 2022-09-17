@@ -1,0 +1,9 @@
+{
+	"name": "Probably",
+	"tree": {
+		"$path": "src",
+		"lib": {
+			"$path": "lib"
+		}
+	}
+}

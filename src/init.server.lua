@@ -1,23 +1,21 @@
-local Fusion = require(script.lib.Fusion)
+local root = script
+
+local Fusion = require(root.lib.Fusion)
 local New = Fusion.New
-local Hydrate = Fusion.Hydrate
 local Children = Fusion.Children
 local Value = Fusion.Value
 local OnEvent = Fusion.OnEvent
 local Out = Fusion.Out
-local Ref = Fusion.Ref
 local Computed = Fusion.Computed
-local OnChange = Fusion.OnChange
 local Observer = Fusion.Observer
-local Tween = Fusion.Tween
 
-local PluginWidgets = script.lib.widgets.PluginComponents
+local PluginWidgets = root.lib.widgets.PluginComponents
 local Toolbar = require(PluginWidgets.Toolbar)
 local ToolbarButton = require(PluginWidgets.ToolbarButton)
 local Widget = require(PluginWidgets.Widget)
 
-local StudioWidgets = script.lib.widgets.StudioComponents
-local Util = script.lib.widgets.StudioComponents.Util
+local StudioWidgets = root.lib.widgets.StudioComponents
+local Util = root.lib.widgets.StudioComponents.Util
 local Background = require(StudioWidgets.Background)
 local BaseButton = require(StudioWidgets.BaseButton)
 local BoxBorder = require(StudioWidgets.BoxBorder)
@@ -39,164 +37,46 @@ local Title = require(StudioWidgets.Title)
 local VerticalCollapsibleSection = require(StudioWidgets.VerticalCollapsibleSection)
 local VerticalExpandingList = require(StudioWidgets.VerticalExpandingList)
 
+local Components = root.Components
+local Panel = require(Components.Panel)
+local Field = require(Components.Field)
+local NumberInput = require(Components.NumberInput)
+local DistGraph = require(Components.DistGraph)
+
 local themeProvider = require(Util.themeProvider)
 
-local Lattice = require(script.lib.Lattice)
+local Lattice = require(root.lib.Lattice)
 
 local maid = {}
-local function finish()
-	for _, task in maid do
-		if type(task) == "function" then
-			task()
-		elseif typeof(task) == "RBXScriptConnection" then
-			task:Disconnect()
-		end
-	end
-	table.clear(maid)
-end
-maid.unloading = plugin.Unloading:Connect(finish)
+local cleanup = require(root.cleanup)
+maid.unloading = plugin.Unloading:Connect(function()
+	cleanup(maid)
+end)
 
-local function Panel(props)
-	props.BackgroundTransparency = props.BackgroundTransparency or 1
-	return New "Frame" (props)
-end
--- Panel = function(props)
--- 	props.BorderSizePixel = 1
--- 	props.Text = props.Name
--- 	return New "TextLabel" (props)
--- end
-
-local function Field(props)
-	return New "Frame" {
-		Name = props.Name,
-		BackgroundTransparency = 1,
-		Size = UDim2.new(1,0,0,25),
-		[Children] = {
-			Label {
-				Text = props.Name,
-				Enabled = props.Enabled,
-				Position = UDim2.new(0,0,0,0),
-				Size = UDim2.new(0.5,0,1,0),
-				TextXAlignment = Enum.TextXAlignment.Left,
-			},
-			Hydrate(props.Value) {
-				Position = UDim2.new(0.5,0,0,0),
-				Size = UDim2.new(0.5,0,1,0),
-			},
-		},
-	}
-end
-
-local function NumberInput(value)
-	local lastGood = ""
-	local input; input = TextInput{
-		Text = value,
-		[OnChange "Text"] = function(text)
-			local t = tonumber(text)
-			if t == nil then
-				input.Text = lastGood
-				return
-			end
-			lastGood = t
-		end,
-		[OnEvent "FocusLost"] = function(enter)
-			local t = tonumber(input.Text)
-			if t then
-				value:set(t)
-				return
-			end
-			input.Text = value:get()
-		end,
-	}
-	return input
-end
-
-local viewOpen = Value(false)
-local graphFrame = Value()
 local settings = {
 	resolution = Value(100),
 	budget = Value(10000),
 	updates = Value(60),
 }
-local minX = Value(0)
-local maxX = Value(1)
-local maxY = Value(1)
 
-local running = Value(false)
-local data = {}
-local dataFrames = {}
-
-local Computation: ((Random)->number)? = nil
-local computationSource = Value("")
-local errorMessage = Value("")
-local errorTextColor = themeProvider:GetColor(Enum.StudioStyleGuideColor.ErrorText)
-
-local fastMinX = math.huge
-local fastMaxX = -math.huge
-local fastMaxY = 0
-local fastTotal = 0
-
-local function updateDisplay()
-	local res = settings.resolution:get()
-	minX:set(fastMinX)
-	maxX:set(fastMaxX)
-	for i, frame in dataFrames do
-		local v = data[i]
-		frame.Size = UDim2.new(1/res,0,v/fastMaxY,0)
-	end
-	if fastTotal == 0 then
-		maxY:set("0.00%")
-	else
-		maxY:set(string.format("%.2f%%", fastMaxY/fastTotal*100))
-	end
-end
-
-local function resetData()
-	for i in data do
-		data[i] = 0
-	end
-	fastMaxY = 0
-	fastTotal = 0
-end
+local lower = Value(math.huge)
+local upper = Value(-math.huge)
+local peak = Value(0)
+local graph = DistGraph({
+	Resolution = settings.resolution,
+	Lower = lower,
+	Upper = upper,
+	Peak = peak,
+})
 
 local random = Random.new()
-local function computeData()
-	if Computation then
-		local ok, v = pcall(Computation, random)
-		if not ok or type(v) ~= "number" or v ~= v then
-			return
-		end
-		local reset = false
-		if v < fastMinX then
-			fastMinX = v
-			reset = true
-		end
-		if v > fastMaxX then
-			fastMaxX = v
-			reset = true
-		end
-		if reset then
-			resetData()
-		end
-		local res = settings.resolution:get()
-		if res > 0 and fastMinX < fastMaxX then
-			local i = math.floor((v-fastMinX)/(fastMaxX-fastMinX)*(res-1))+1
-			if data[i] == nil then
-				error(string.format("%g %d %g %g", v, i, fastMinX, fastMaxX))
-			end
-			local n = data[i] + 1
-			data[i] = n
-			fastTotal += 1
-			if n > fastMaxY then
-				fastMaxY = n
-			end
-		end
-	end
-end
+local distFunc: ((Random)->number)? = nil
 
-maid.source = Observer(computationSource):onChange(function()
-	local source = computationSource:get()
-	local func, err = loadstring(source, "computation")
+local source = Value("")
+local errorMessage = Value("")
+maid.source = Observer(source):onChange(function()
+	local source = source:get()
+	local func, err = loadstring(source, "dist")
 	if not func then
 		errorMessage:set(tostring(err))
 		return
@@ -211,40 +91,23 @@ maid.source = Observer(computationSource):onChange(function()
 		errorMessage:set(err)
 		return
 	end
-	resetData()
-	fastMinX = math.huge
-	fastMaxX = -math.huge
-	Computation = comp
+	graph:Reset()
+	graph:ResetBounds()
+	distFunc = comp
 	errorMessage:set("")
 end)
 
-local dataFrameColor = themeProvider:GetColor(Enum.StudioStyleGuideColor.LinkText)
-local function onResChanged()
-	local res = settings.resolution:get()
-	data = table.create(res, 0)
-	if res < #dataFrames then
-		for i = res+1, #dataFrames do
-			dataFrames[i]:Destroy()
-			dataFrames[i] = nil
+local function sample()
+	if distFunc then
+		local ok, v = pcall(distFunc, random)
+		if not ok or type(v) ~= "number" or v ~= v then
+			return
 		end
-	elseif res > #dataFrames then
-		for i = #dataFrames+1, res do
-			local frame = New "Frame" {
-				BackgroundColor3 = dataFrameColor,
-				BorderSizePixel = 0,
-			}
-			frame.Parent = graphFrame:get()
-			dataFrames[i] = frame
-		end
+		graph:AddSample(v)
 	end
-	for i, frame in dataFrames do
-		frame.Position = UDim2.new((i-1)/res,0,0,0)
-	end
-	resetData()
-	updateDisplay()
 end
-maid.resChanged = Observer(settings.resolution):onChange(onResChanged)
 
+local running = Value(false)
 local rid = 0
 maid.runner = Observer(running):onChange(function()
 	if running:get() then
@@ -253,7 +116,7 @@ maid.runner = Observer(running):onChange(function()
 		local budgetTick = os.clock()
 		local updateTick = budgetTick
 		while running:get() and id == rid do
-			computeData()
+			sample()
 			local budget = settings.budget:get()/1000000
 			if budget > 1 then
 				budget = 1
@@ -264,26 +127,26 @@ maid.runner = Observer(running):onChange(function()
 			end
 			local updates = 1/settings.updates:get()
 			if os.clock() - updateTick > updates then
-				updateDisplay()
+				graph:Render()
 				updateTick = os.clock()
 			end
 		end
 	end
 end)
 
+local viewOpen = Value(false)
 local toolbar = Toolbar{Name = "Probably"}
-local toggleView = ToolbarButton{
+ToolbarButton{
 	Toolbar = toolbar,
-	Name = "ToggleGraphView",
+	Name = "Graph",
 	ToolTip = "Toggle the graph view.",
-	Image = "",
+	Image = "rbxasset://probably/logo.png",
 	Active = viewOpen,
 	[OnEvent "Click"] = function()
 		viewOpen:set(not viewOpen:get())
 	end,
 }
-
-local dock = Widget{
+Widget{
 	Id = "GraphView",
 	Name = "Probably",
 	InitialDockTo = "Float",
@@ -328,8 +191,8 @@ local dock = Widget{
 									Enabled = true,
 									Icon = "rbxasset://probably/reset.png",
 									[OnEvent "Activated"] = function()
-										resetData()
-										updateDisplay()
+										graph:Reset()
+										graph:Render()
 									end,
 								}),
 							},
@@ -347,7 +210,9 @@ local dock = Widget{
 							},
 							Label {
 								Name = "Max",
-								Text = maxY,
+								Text = Computed(function()
+									return string.format("%.2f%%", peak:get()*100)
+								end),
 								Position = UDim2.new(0,0,0,0),
 								Size = UDim2.new(1,0,0,1),
 								TextYAlignment = Enum.TextYAlignment.Top,
@@ -360,7 +225,7 @@ local dock = Widget{
 							Label {
 								Name = "Min",
 								Text = Computed(function()
-									return string.format("%.3g", minX:get())
+									return string.format("%.3g", lower:get())
 								end),
 								Position = UDim2.new(0,0,0,0),
 								Size = UDim2.new(0,1,1,0),
@@ -369,7 +234,7 @@ local dock = Widget{
 							Label {
 								Name = "Max",
 								Text = Computed(function()
-									return string.format("%.3g", maxX:get())
+									return string.format("%.3g", upper:get())
 								end),
 								Position = UDim2.new(1,0,0,0),
 								Size = UDim2.new(0,1,1,0),
@@ -377,18 +242,7 @@ local dock = Widget{
 							},
 						},
 					}),
-					Lattice.cell(1,1, 1,2, BoxBorder{
-						[Children] = Background {
-							Name = "Graph",
-							[Ref] = graphFrame,
-							[Children] = {
-								New "UIListLayout" {
-									FillDirection = Enum.FillDirection.Horizontal,
-									VerticalAlignment = Enum.VerticalAlignment.Bottom,
-								},
-							},
-						},
-					}),
+					Lattice.cell(1,1, 1,2, graph.Frame),
 					Lattice.cell(2,1, 1,1, TextInput{
 						Name = "Source",
 						MultiLine = true,
@@ -397,8 +251,8 @@ local dock = Widget{
 						TextXAlignment = Enum.TextXAlignment.Left,
 						TextYAlignment = Enum.TextYAlignment.Top,
 						TextWrapped = false,
-						Text = computationSource,
-						[Out "Text"] = computationSource,
+						Text = source,
+						[Out "Text"] = source,
 					}),
 					Lattice.cell(2,2, 1,1, BoxBorder{
 						[Children] = Background {
@@ -439,7 +293,7 @@ local dock = Widget{
 						TextWrapped = true,
 						TextXAlignment = Enum.TextXAlignment.Left,
 						TextYAlignment = Enum.TextYAlignment.Top,
-						TextColor3 = errorTextColor,
+						TextColor3 = themeProvider:GetColor(Enum.StudioStyleGuideColor.ErrorText),
 					}),
 				},
 			},
@@ -447,13 +301,9 @@ local dock = Widget{
 	},
 }
 
-onResChanged()
-computationSource:set([[
+source:set([[
 return function(r: Random)
     local a = r:NextNumber(1,6)
     local b = r:NextNumber(1,6)
     return a+b
 end]])
-
-task.wait(0.5)
-viewOpen:set(true)

@@ -50,6 +50,8 @@ local themeProvider = require(Util.themeProvider)
 
 local Lattice = require(root.lib.Lattice)
 
+local FakeRandom = require(root.FakeRandom)
+
 local maid = {}
 local cleanup = require(root.cleanup)
 maid.unloading = plugin.Unloading:Connect(function()
@@ -72,8 +74,20 @@ local graph = DistGraph({
 	Peak = peak,
 })
 
+local randomMin = FakeRandom.min()
+local randomMax = FakeRandom.max()
 local random = Random.new()
 local distFunc: ((Random)->number)? = nil
+
+local function sample(random)
+	if distFunc then
+		local ok, v = pcall(distFunc, random)
+		if not ok or type(v) ~= "number" or v ~= v then
+			return
+		end
+		graph:AddSample(v)
+	end
+end
 
 local source = Value("")
 local errorMessage = Value("")
@@ -98,17 +112,10 @@ maid.source = Observer(source):onChange(function()
 	graph:ResetBounds()
 	distFunc = comp
 	errorMessage:set("")
+	-- Atempt to find lower and upper bounds early.
+	sample(randomMin)
+	sample(randomMax)
 end)
-
-local function sample()
-	if distFunc then
-		local ok, v = pcall(distFunc, random)
-		if not ok or type(v) ~= "number" or v ~= v then
-			return
-		end
-		graph:AddSample(v)
-	end
-end
 
 local running = Value(false)
 local rid = 0
@@ -119,7 +126,7 @@ maid.runner = Observer(running):onChange(function()
 		local budgetTick = os.clock()
 		local updateTick = budgetTick
 		while running:get() and id == rid do
-			sample()
+			sample(random)
 			local budget = settings.budget:get()/1000000
 			if budget > 1 then
 				budget = 1

@@ -1,6 +1,7 @@
 local root = script
 
 local Asset = require(root.Asset)
+local Settings = require(root.Settings)
 
 local Fusion = require(root.lib.Fusion)
 local New = Fusion.New
@@ -55,11 +56,11 @@ maid.unloading = plugin.Unloading:Connect(function()
 	cleanup(maid)
 end)
 
-local settings = {
-	resolution = Value(100),
-	budget = Value(10000),
-	updates = Value(60),
-}
+local settings = Settings(plugin, maid, {
+	resolution = 100,
+	budget     = 10000,
+	updates    = 60,
+})
 
 local lower = Value(math.huge)
 local upper = Value(-math.huge)

@@ -1,6 +1,6 @@
 return table.freeze {
-	Logo  = "rbxasset://probably/logo.png",
-	Play  = "rbxasset://probably/play.png",
-	Pause = "rbxasset://probably/pause.png",
-	Reset = "rbxasset://probably/reset.png",
+	Logo  = "rbxassetid://10949992169",
+	Play  = "rbxassetid://10949995244",
+	Pause = "rbxassetid://10949996980",
+	Reset = "rbxassetid://10949999208",
 }

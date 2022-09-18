@@ -1,5 +1,7 @@
 local root = script
 
+local Asset = require(root.Asset)
+
 local Fusion = require(root.lib.Fusion)
 local New = Fusion.New
 local Children = Fusion.Children
@@ -140,7 +142,7 @@ ToolbarButton{
 	Toolbar = toolbar,
 	Name = "Graph",
 	ToolTip = "Toggle the graph view.",
-	Image = "rbxasset://probably/logo.png",
+	Image = Asset.Logo,
 	Active = viewOpen,
 	[OnEvent "Click"] = function()
 		viewOpen:set(not viewOpen:get())
@@ -177,9 +179,9 @@ Widget{
 									Enabled = true,
 									Icon = Computed(function()
 										if running:get() then
-											return "rbxasset://probably/pause.png"
+											return Asset.Pause
 										else
-											return "rbxasset://probably/play.png"
+											return Asset.Play
 										end
 									end),
 									[OnEvent "Activated"] = function()
@@ -189,7 +191,7 @@ Widget{
 								Lattice.pos(1,0, IconButton{
 									Name = "Reset",
 									Enabled = true,
-									Icon = "rbxasset://probably/reset.png",
+									Icon = Asset.Reset,
 									[OnEvent "Activated"] = function()
 										graph:Reset()
 										graph:Render()

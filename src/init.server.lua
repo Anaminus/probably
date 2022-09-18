@@ -145,6 +145,11 @@ maid.runner = Observer(running):onChange(function()
 end)
 
 local viewOpen = Value(false)
+maid.pauseOnClose = Observer(viewOpen):onChange(function()
+	if not viewOpen:get() then
+		running:set(false)
+	end
+end)
 local toolbar = Toolbar{Name = "Probably"}
 ToolbarButton{
 	Toolbar = toolbar,

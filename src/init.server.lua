@@ -1,3 +1,5 @@
+local VERSION = "1.0"
+
 local root = script
 
 local Asset = require(root.Asset)
@@ -46,9 +48,12 @@ local Field = require(Components.Field)
 local NumberInput = require(Components.NumberInput)
 local DistGraph = require(Components.DistGraph)
 
+local constants = require(Util.constants)
 local themeProvider = require(Util.themeProvider)
 
 local Lattice = require(root.lib.Lattice)
+local fr = "fr"
+local px = "px"
 
 local FakeRandom = require(root.FakeRandom)
 
@@ -148,10 +153,16 @@ maid.runner = Observer(running):onChange(function()
 	end
 end)
 
+local textSize = constants.TextSize
+local textSizeCode = 16
+local textSizeLarge = textSize*3
+
 local viewOpen = Value(false)
+local aboutOpen = Value(false)
 maid.pauseOnClose = Observer(viewOpen):onChange(function()
 	if not viewOpen:get() then
 		running:set(false)
+		aboutOpen:set(false)
 	end
 end)
 local toolbar = Toolbar{Name = "Probably"}
@@ -183,9 +194,10 @@ Widget{
 			Margin = 4,
 			Padding = 4,
 			Frame = Background{
+				Visible = Computed(function() return not aboutOpen:get() end),
 				[Children] = {
 					Lattice.cell(0,0, 3,1, Lattice.new{
-						Columns = "40px 40px 1fr",
+						Columns = "40px 40px 1fr 40px",
 						Rows = "1fr",
 						Padding = 4,
 						Frame = Panel{
@@ -212,6 +224,14 @@ Widget{
 									[OnEvent "Activated"] = function()
 										graph:Reset()
 										graph:Render()
+									end,
+								}),
+								Lattice.pos(3,0, IconButton{
+									Name = "About",
+									Enabled = true,
+									Icon = Asset.About,
+									[OnEvent "Activated"] = function()
+										aboutOpen:set(true)
 									end,
 								}),
 							},
@@ -266,7 +286,7 @@ Widget{
 						Name = "Source",
 						MultiLine = true,
 						Font = Enum.Font.Code,
-						TextSize = 16,
+						TextSize = textSizeCode,
 						TextXAlignment = Enum.TextXAlignment.Left,
 						TextYAlignment = Enum.TextYAlignment.Top,
 						TextWrapped = false,
@@ -313,6 +333,116 @@ Widget{
 						TextXAlignment = Enum.TextXAlignment.Left,
 						TextYAlignment = Enum.TextYAlignment.Top,
 						TextColor3 = themeProvider:GetColor(Enum.StudioStyleGuideColor.ErrorText),
+					}),
+				},
+			},
+		},
+		Lattice.new{
+			Columns = Lattice.span(1,fr, 40,px, 1,fr, 40,px, 1,fr, 40,px),
+			Rows = Lattice.span(40,px, textSize*7,px, textSize,px, 1,fr),
+			Margin = 4,
+			Padding = 4,
+			Frame = Background{
+				Visible = aboutOpen,
+				[Children] = {
+					Lattice.cell(0,0, 5,1, Panel{
+						Name = "Title",
+						[Children] = {
+							New "UIListLayout" {
+								FillDirection = Enum.FillDirection.Horizontal,
+								VerticalAlignment = Enum.VerticalAlignment.Center,
+							},
+							New "ImageLabel" {
+								Size = UDim2.fromOffset(32, 32),
+								BackgroundTransparency = 1,
+								Image = Asset.Logo,
+							},
+							Title{
+								Text = "Probably",
+								TextXAlignment = Enum.TextXAlignment.Left,
+								TextYAlignment = Enum.TextYAlignment.Center,
+								TextSize = textSizeLarge,
+								AutomaticSize = Enum.AutomaticSize.XY,
+								Size = UDim2.fromScale(0, 0),
+							},
+							Label{
+								Text = "v" .. VERSION,
+								TextXAlignment = Enum.TextXAlignment.Left,
+								TextYAlignment = Enum.TextYAlignment.Bottom,
+								TextSize = textSize,
+								AutomaticSize = Enum.AutomaticSize.XY,
+								Size = UDim2.fromScale(0, 1),
+							},
+						},
+					}),
+					Lattice.cell(5,0, 1,1, IconButton{
+						Name = "Back",
+						Enabled = true,
+						Icon = Asset.Back,
+						[OnEvent "Activated"] = function()
+							aboutOpen:set(false)
+						end,
+					}),
+					Lattice.cell(0,1, 6,1, Label{
+						Name = "Description",
+						Text = [[
+A plugin for displaying the probability distributions of Luau functions.
+
+<b>Authors:</b> Anaminus
+
+<i>The source code and assets for Probably, except for the logo, are licensed under MIT.</i>]],
+						RichText = true,
+						TextXAlignment = Enum.TextXAlignment.Left,
+						TextYAlignment = Enum.TextYAlignment.Top,
+						TextSize = textSize,
+						TextWrapped = true,
+					}),
+					Lattice.cell(0,2, 6,1, Label{
+						Name = "LibDesc",
+						Text = "Probably was made with the following libraries:",
+						TextXAlignment = Enum.TextXAlignment.Left,
+						TextYAlignment = Enum.TextYAlignment.Top,
+						TextSize = textSize,
+						TextWrapped = true,
+					}),
+					Lattice.cell(0,3, 2,1, Panel{
+						Name = "Libraries",
+						[Children] = {
+							New "UIListLayout" {
+								FillDirection = Enum.FillDirection.Vertical,
+								HorizontalAlignment = Enum.HorizontalAlignment.Left,
+							},
+							Title {Text = "Library"},
+							Label {Text = "Fusion"},
+							Label {Text = "PluginEssentials"},
+							Label {Text = "UILattice"},
+						},
+					}),
+					Lattice.cell(2,3, 2,1, Panel{
+						Name = "Authors",
+						[Children] = {
+							New "UIListLayout" {
+								FillDirection = Enum.FillDirection.Vertical,
+								HorizontalAlignment = Enum.HorizontalAlignment.Left,
+							},
+							Title {Text = "Author"},
+							Label {Text = "Elttob"},
+							Label {Text = "Yasu Yoshida (mvyasu)"},
+							Label {Text = "Anaminus"},
+						},
+					}),
+					Lattice.cell(4,3, 2,1, Panel{
+						Name = "Licenses",
+						[Children] = {
+							New "UIListLayout" {
+								FillDirection = Enum.FillDirection.Vertical,
+								HorizontalAlignment = Enum.HorizontalAlignment.Left,
+							},
+							Title {Text = "License"},
+							Label {Text = "MIT"},
+							Label {Text = "MIT"},
+							Label {Text = "MIT-0"},
+						},
 					}),
 				},
 			},

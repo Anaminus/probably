@@ -79,13 +79,17 @@ local randomMax = FakeRandom.max()
 local random = Random.new()
 local distFunc: ((Random)->number)? = nil
 
-local function sample(random)
+local function sample(random, bounds)
 	if distFunc then
 		local ok, v = pcall(distFunc, random)
 		if not ok or type(v) ~= "number" or v ~= v then
 			return
 		end
-		graph:AddSample(v)
+		if bounds then
+			graph:UpdateBounds(v)
+		else
+			graph:AddSample(v)
+		end
 	end
 end
 
@@ -112,9 +116,9 @@ maid.source = Observer(source):onChange(function()
 	graph:ResetBounds()
 	distFunc = comp
 	errorMessage:set("")
-	-- Atempt to find lower and upper bounds early.
-	sample(randomMin)
-	sample(randomMax)
+	-- Attempt to find lower and upper bounds early.
+	sample(randomMin, true)
+	sample(randomMax, true)
 end)
 
 local running = Value(false)

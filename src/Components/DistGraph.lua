@@ -112,7 +112,7 @@ local function DistGraph(opt: DistGraphOptions)
 		fastMaxX = -math.huge
 	end
 
-	function self:AddSample(value: number)
+	function self:UpdateBounds(value: number)
 		local reset = false
 		if value < fastMinX then
 			fastMinX = value
@@ -125,6 +125,10 @@ local function DistGraph(opt: DistGraphOptions)
 		if reset then
 			self:Reset()
 		end
+	end
+
+	function self:AddSample(value: number)
+		self:UpdateBounds(value)
 		local res = resolution:get()
 		if res > 0 and fastMinX < fastMaxX then
 			local i = math.floor((value-fastMinX)/(fastMaxX-fastMinX)*(res-1))+1

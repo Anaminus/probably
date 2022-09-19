@@ -4,15 +4,23 @@ local Fusion = require(root.lib.Fusion)
 local New = Fusion.New
 local Children = Fusion.Children
 local Observer = Fusion.Observer
+local OnEvent = Fusion.OnEvent
+local Computed = Fusion.Computed
+local Value = Fusion.Value
+local Out = Fusion.Out
 
 local StudioWidgets = root.lib.widgets.StudioComponents
 local Util = root.lib.widgets.StudioComponents.Util
 local Background = require(StudioWidgets.Background)
 local BoxBorder = require(StudioWidgets.BoxBorder)
+local Label = require(StudioWidgets.Label)
 
 local themeProvider = require(Util.themeProvider)
+local constants = require(Util.constants)
 
 local cleanup = require(root.cleanup)
+
+local TextService = game:GetService("TextService")
 
 export type DistGraphOptions = {
 	Resolution: Fusion.StateObject<number>,
@@ -28,19 +36,11 @@ local function DistGraph(opt: DistGraphOptions)
 	local fastMaxX = -math.huge
 	local fastMaxY = 0
 	local fastTotal = 0
+	local highlightedIndex: number? = nil
 	local data = {}
 	local dataFrames = {}
-	local graphFrame = BoxBorder{
-		[Children] = Background {
-			Name = "Graph",
-			[Children] = {
-				New "UIListLayout" {
-					FillDirection = Enum.FillDirection.Horizontal,
-					VerticalAlignment = Enum.VerticalAlignment.Bottom,
-				},
-			},
-		},
-	}
+
+	local graphFrame: GuiObject
 
 	local resolution = opt.Resolution
 	local lower = opt.Lower
@@ -49,13 +49,10 @@ local function DistGraph(opt: DistGraphOptions)
 
 	local self = {}
 
-	self.Frame = graphFrame
-
 	function self:Destroy()
 		cleanup(maid)
 	end
 
-	local dataFrameColor = themeProvider:GetColor(Enum.StudioStyleGuideColor.LinkText)
 	local function updateResolution()
 		local res = resolution:get()
 		if res == #dataFrames then
@@ -70,33 +67,94 @@ local function DistGraph(opt: DistGraphOptions)
 		elseif res > #dataFrames then
 			for i = #dataFrames+1, res do
 				local frame = New "Frame" {
-					BackgroundColor3 = dataFrameColor,
 					BorderSizePixel = 0,
+					AnchorPoint = Vector2.new(0, 1),
 				}
 				frame.Parent = graphFrame
 				dataFrames[i] = frame
 			end
 		end
 		for i, frame in dataFrames do
-			frame.Position = UDim2.new((i-1)/res,0,0,0)
+			frame.Position = UDim2.fromScale((i-1)/res, 1)
 		end
 		self:Reset()
 		self:Render()
 	end
 
+	local dataColor = themeProvider:GetColor(
+		Enum.StudioStyleGuideColor.DialogMainButton,
+		Enum.StudioStyleGuideModifier.Default
+	)
+	local dataHoverColor = themeProvider:GetColor(
+		Enum.StudioStyleGuideColor.DialogMainButton,
+		Enum.StudioStyleGuideModifier.Hover
+	)
+
+	local dataLabelBounds = Value(Vector2.new())
+	local dataLabel = Label {
+		Visible = false,
+		ZIndex = 2,
+		BorderSizePixel = 0,
+		BackgroundTransparency = 0,
+		BackgroundColor3 = themeProvider:GetColor(Enum.StudioStyleGuideColor.MainBackground),
+		[Out "TextBounds"] = dataLabelBounds,
+		Size = Computed(function()
+			local bounds = dataLabelBounds:get()
+			if not bounds then
+				return UDim2.new()
+			end
+			return UDim2.fromOffset(bounds.X, bounds.Y)
+		end),
+	}
+
 	function self:Render()
 		local res = resolution:get()
 		lower:set(fastMinX)
 		upper:set(fastMaxX)
+		dataLabel.Visible = false
 		for i, frame in dataFrames do
 			local v = data[i]
 			frame.Size = UDim2.new(1/res,0,v/fastMaxY,0)
+			if i == highlightedIndex then
+				if fastTotal > 0 then
+					local gp = graphFrame.AbsolutePosition
+					local gs = graphFrame.AbsoluteSize
+					local bp = frame.AbsolutePosition - gp
+					local bs = frame.AbsoluteSize
+					local ls = dataLabel.AbsoluteSize
+					local pos = Vector2.new(math.clamp(bp.X + bs.X/2 - ls.X/2, 0, gs.X - ls.X), 0)
+
+					dataLabel.Visible = true
+					dataLabel.Position = UDim2.fromOffset(pos.X, pos.Y)
+					dataLabel.Text = string.format("%.2f%%", data[i]/fastTotal*100)
+				end
+
+				frame.BackgroundColor3 = dataHoverColor:get()
+			else
+				frame.BackgroundColor3 = dataColor:get()
+			end
 		end
 		if fastTotal == 0 then
 			peak:set(0)
 		else
 			peak:set(fastMaxY/fastTotal)
 		end
+	end
+
+	function self:RenderHover(position: Vector2?)
+		highlightedIndex = nil
+		if position == nil or #dataFrames == 0 then
+			self:Render()
+			return
+		end
+		local graphPos = graphFrame.AbsolutePosition
+		local graphSize = graphFrame.AbsoluteSize
+		local scalar = ((position-graphPos)/graphSize).X
+		if scalar < 0 or scalar > 1 then
+			return
+		end
+		highlightedIndex = math.floor(#dataFrames*scalar)+1
+		self:Render()
 	end
 
 	function self:Reset()
@@ -143,6 +201,40 @@ local function DistGraph(opt: DistGraphOptions)
 			end
 		end
 	end
+
+	graphFrame = BoxBorder{
+		[Children] = Background {
+			Name = "Graph",
+			[Children] = dataLabel,
+			[OnEvent "InputBegan"] = function(input: InputObject)
+				if input.UserInputType ~= Enum.UserInputType.MouseMovement then
+					return
+				end
+				maid.inputChanged = input:GetPropertyChangedSignal("Position"):Connect(function()
+					if input.UserInputType ~= Enum.UserInputType.MouseMovement then
+						return
+					end
+					self:RenderHover(Vector2.new(input.Position.X, input.Position.Y))
+				end)
+				self:RenderHover(Vector2.new(input.Position.X, input.Position.Y))
+			end,
+			[OnEvent "InputEnded"] = function(input: InputObject)
+				if input.UserInputType ~= Enum.UserInputType.MouseMovement then
+					return
+				end
+				if typeof(maid.inputChanged) == "RBXScriptConnection" then
+					maid.inputChanged:Disconnect()
+					maid.inputChanged = nil
+				end
+				if typeof(maid.inputEnded) == "RBXScriptConnection" then
+					maid.inputEnded:Disconnect()
+					maid.inputEnded = nil
+				end
+				self:RenderHover(nil)
+			end,
+		},
+	}
+	self.Frame = graphFrame
 
 	maid.resChanged = Observer(resolution):onChange(updateResolution)
 	updateResolution()

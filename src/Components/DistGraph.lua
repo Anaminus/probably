@@ -111,40 +111,28 @@ local function DistGraph(opt: DistGraphOptions)
 		local res = resolution:get()
 		lower:set(fastMinX)
 		upper:set(fastMaxX)
-		dataLabel.Visible = false
 		for i, frame in dataFrames do
 			local v = data[i]
 			frame.Size = UDim2.new(1/res,0,v/fastMaxY,0)
-			if i == highlightedIndex then
-				if fastTotal > 0 then
-					local gp = graphFrame.AbsolutePosition
-					local gs = graphFrame.AbsoluteSize
-					local bp = frame.AbsolutePosition - gp
-					local bs = frame.AbsoluteSize
-					local ls = dataLabel.AbsoluteSize
-					local pos = Vector2.new(math.clamp(bp.X + bs.X/2 - ls.X/2, 0, gs.X - ls.X), 0)
-
-					dataLabel.Visible = true
-					dataLabel.Position = UDim2.fromOffset(pos.X, pos.Y)
-					dataLabel.Text = string.format("%.2f%%", data[i]/fastTotal*100)
-				end
-
-				frame.BackgroundColor3 = dataHoverColor:get()
-			else
-				frame.BackgroundColor3 = dataColor:get()
-			end
 		end
 		if fastTotal == 0 then
 			peak:set(0)
 		else
 			peak:set(fastMaxY/fastTotal)
 		end
+		if highlightedIndex then
+			dataLabel.Text = string.format("%.2f%%", data[highlightedIndex]/fastTotal*100)
+		end
 	end
 
 	function self:RenderHover(position: Vector2?)
 		highlightedIndex = nil
-		if position == nil or #dataFrames == 0 then
-			self:Render()
+		dataLabel.Visible = false
+		local color = dataColor:get()
+		for i, frame in dataFrames do
+			frame.BackgroundColor3 = color
+		end
+		if position == nil or #dataFrames == 0 or fastTotal == 0 then
 			return
 		end
 		local graphPos = graphFrame.AbsolutePosition
@@ -154,7 +142,18 @@ local function DistGraph(opt: DistGraphOptions)
 			return
 		end
 		highlightedIndex = math.floor(#dataFrames*scalar)+1
-		self:Render()
+		local frame = dataFrames[highlightedIndex]
+		local gp = graphFrame.AbsolutePosition
+		local gs = graphFrame.AbsoluteSize
+		local bp = frame.AbsolutePosition - gp
+		local bs = frame.AbsoluteSize
+		local ls = dataLabel.AbsoluteSize
+		local pos = Vector2.new(math.clamp(bp.X + bs.X/2 - ls.X/2, 0, gs.X - ls.X), 0)
+
+		dataLabel.Visible = true
+		dataLabel.Position = UDim2.fromOffset(pos.X, pos.Y)
+		dataLabel.Text = string.format("%.2f%%", data[highlightedIndex]/fastTotal*100)
+		frame.BackgroundColor3 = dataHoverColor:get()
 	end
 
 	function self:Reset()

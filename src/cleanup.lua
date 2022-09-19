@@ -1,4 +1,4 @@
-export type Tasks = {[string|number]: ()->() | RBXScriptConnection | Tasks}
+export type Tasks = {[string|number]: ()->() | RBXScriptConnection | Tasks | nil}
 
 local function cleanup(maid: Tasks)
 	for _, task in maid do

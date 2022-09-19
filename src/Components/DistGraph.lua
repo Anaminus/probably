@@ -53,6 +53,15 @@ local function DistGraph(opt: DistGraphOptions)
 		cleanup(maid)
 	end
 
+	local dataColor = themeProvider:GetColor(
+		Enum.StudioStyleGuideColor.DialogMainButton,
+		Enum.StudioStyleGuideModifier.Default
+	)
+	local dataHoverColor = themeProvider:GetColor(
+		Enum.StudioStyleGuideColor.DialogMainButton,
+		Enum.StudioStyleGuideModifier.Hover
+	)
+
 	local function updateResolution()
 		local res = resolution:get()
 		if res == #dataFrames then
@@ -65,10 +74,12 @@ local function DistGraph(opt: DistGraphOptions)
 				dataFrames[i] = nil
 			end
 		elseif res > #dataFrames then
+			local color = dataColor:get()
 			for i = #dataFrames+1, res do
 				local frame = New "Frame" {
 					BorderSizePixel = 0,
 					AnchorPoint = Vector2.new(0, 1),
+					BackgroundColor3 = color,
 				}
 				frame.Parent = graphFrame
 				dataFrames[i] = frame
@@ -80,15 +91,6 @@ local function DistGraph(opt: DistGraphOptions)
 		self:Reset()
 		self:Render()
 	end
-
-	local dataColor = themeProvider:GetColor(
-		Enum.StudioStyleGuideColor.DialogMainButton,
-		Enum.StudioStyleGuideModifier.Default
-	)
-	local dataHoverColor = themeProvider:GetColor(
-		Enum.StudioStyleGuideColor.DialogMainButton,
-		Enum.StudioStyleGuideModifier.Hover
-	)
 
 	local dataLabelBounds = Value(Vector2.new())
 	local dataLabel = Label {

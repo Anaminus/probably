@@ -264,7 +264,7 @@ Widget{
 							Label {
 								Name = "Min",
 								Text = Computed(function()
-									return string.format("%.3g", lower:get())
+									return tostring(lower:get())
 								end),
 								Position = UDim2.new(0,0,0,0),
 								Size = UDim2.new(0,1,1,0),
@@ -273,7 +273,7 @@ Widget{
 							Label {
 								Name = "Max",
 								Text = Computed(function()
-									return string.format("%.3g", upper:get())
+									return tostring(upper:get())
 								end),
 								Position = UDim2.new(1,0,0,0),
 								Size = UDim2.new(0,1,1,0),

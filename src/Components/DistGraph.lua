@@ -140,7 +140,7 @@ local function DistGraph(opt: DistGraphOptions)
 		local graphPos = graphFrame.AbsolutePosition
 		local graphSize = graphFrame.AbsoluteSize
 		local scalar = ((position-graphPos)/graphSize).X
-		if scalar < 0 or scalar > 1 then
+		if scalar < 0 or scalar >= 1 then
 			return
 		end
 		highlightedIndex = math.floor(#dataFrames*scalar)+1

@@ -87,7 +87,11 @@ local distFunc: ((Random)->number)? = nil
 local function sample(random, bounds)
 	if distFunc then
 		local ok, v = pcall(distFunc, random)
-		if not ok or type(v) ~= "number" or v ~= v then
+		if not ok or
+			type(v) ~= "number" or
+			v ~= v or
+			v == math.huge or
+			v == -math.huge then
 			return
 		end
 		if bounds then

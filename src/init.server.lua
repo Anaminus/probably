@@ -102,12 +102,17 @@ local source = Value("")
 local errorMessage = Value("")
 maid.source = Observer(source):onChange(function()
 	local source = source:get()
-	local func, err = loadstring(source, "dist")
+	local ok, func, err = pcall(loadstring, source, "dist")
+	if not ok then
+		errorMessage:set(func)
+		return
+	end
 	if not func then
 		errorMessage:set(tostring(err))
 		return
 	end
-	local ok, comp = pcall(func)
+	local comp
+	ok, comp = pcall(func)
 	if not ok then
 		errorMessage:set(tostring(comp))
 		return

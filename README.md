@@ -16,7 +16,7 @@ Probably should be avoided, as they will have been authored by untrusted
 providers. Instead, it is recommended that you compile the plugin yourself [from
 source](#building).
 
-[asset]: https://www.roblox.com/library/0
+[asset]: https://www.roblox.com/library/10950134531
 
 # Usage
 Probably adds the Probably button to the toolbar. Clicking it will toggle the

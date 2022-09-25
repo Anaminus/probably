@@ -1,3 +1,6 @@
 [submodule "lib/Fusion"]
 	path = lib/Fusion
 	url = git@github.com:Elttob/Fusion.git
+[submodule "lib/PluginEssentials"]
+	path = lib/PluginEssentials
+	url = git@github.com:mvyasu/PluginEssentials.git

@@ -74,6 +74,17 @@ return function(r: Random)
 end]]
 })
 
+maid.resLimit = Observer(settings.resolution):onChange(function()
+	if settings.resolution:get() > 2000 then
+		settings.resolution:set(2000)
+	end
+end)
+maid.budgetLimit = Observer(settings.budget):onChange(function()
+	if settings.budget:get() > 1000000 then
+		settings.resolution:set(1000000)
+	end
+end)
+
 local lower = Value(math.huge)
 local upper = Value(-math.huge)
 local peak = Value(0)
@@ -325,12 +336,12 @@ Widget{
 								},
 								Field{
 									Name = "Resolution",
-									Value = NumberInput(settings.resolution),
+									Value = NumberInput(settings.resolution, 0, 2000),
 									LayoutOrder = 1,
 								},
 								Field{
 									Name = "Budget (μs)",
-									Value = NumberInput(settings.budget),
+									Value = NumberInput(settings.budget, 0, 1000000),
 									LayoutOrder = 2,
 								},
 								Field{

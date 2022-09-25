@@ -7,7 +7,7 @@ local OnChange = Fusion.OnChange
 local StudioWidgets = root.lib.PluginEssentials.StudioComponents
 local TextInput = require(StudioWidgets.TextInput)
 
-local function NumberInput(value)
+local function NumberInput(value, min, max)
 	local lastGood = ""
 	local input; input = TextInput{
 		Text = value,
@@ -21,6 +21,12 @@ local function NumberInput(value)
 		end,
 		[OnEvent "FocusLost"] = function(enter)
 			local t = tonumber(input.Text)
+			if min and t < min then
+				t = min
+			end
+			if max and t > max then
+				t = max
+			end
 			if t then
 				value:set(t)
 				return

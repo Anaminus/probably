@@ -3,7 +3,16 @@
 	"tree": {
 		"$path": "src",
 		"lib": {
-			"$path": "lib"
+			"$className": "Folder",
+			"Fusion": {
+				"$path": "lib/Fusion"
+			},
+			"widgets": {
+				"$path": "lib/widgets"
+			},
+			"Lattice": {
+				"$path": "lib/Lattice"
+			}
 		}
 	}
 }

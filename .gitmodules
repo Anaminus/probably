@@ -1,0 +1,3 @@
+[submodule "lib/Fusion"]
+	path = lib/Fusion
+	url = git@github.com:Elttob/Fusion.git

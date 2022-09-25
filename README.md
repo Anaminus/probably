@@ -76,21 +76,24 @@ There are several options for configuring the plugin:
 # Permissions
 Probably requires **no** permissions to operate.
 
+*Note: To operate correctly in Run mode, ServerScriptService.LoadStringEnabled
+must be set to true.*
+
 # Building
 If cloning the repository, ensure that submodules are downloaded:
 
 ```bash
-git clone TODO
+git clone --recurse-submodules https://github.com/Anaminus/probably
 ```
 
 Otherwise, ensure that submodules are up to date:
 
 ```bash
-git submodule TODO
+git submodule update --init --recursive
 ```
 
-This project is built with Rojo. Run the `build` command, outputting to your
-configured plugins directory:
+This project is built with [Rojo][rojo]. Run the `build` command, outputting to
+your configured plugins directory:
 
 ```bash
 rojo build --output $PLUGINS_PATH
@@ -99,3 +102,5 @@ rojo build --output $PLUGINS_PATH
 # License
 The source code and assets for Probably, except for the logo, are licensed under
 [MIT](LICENSE).
+
+[rojo]: https://rojo.space/

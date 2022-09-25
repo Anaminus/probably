@@ -123,7 +123,10 @@ local function DistGraph(opt: DistGraphOptions)
 			peak:set(fastMaxY/fastTotal)
 		end
 		if highlightedIndex then
-			dataLabel.Text = string.format("%.2f%%", data[highlightedIndex]/fastTotal*100)
+			local value = data[highlightedIndex]
+			if value then
+				dataLabel.Text = string.format("%.2f%%", value/fastTotal*100)
+			end
 		end
 	end
 

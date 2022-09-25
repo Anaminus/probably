@@ -64,13 +64,14 @@ maid.unloading = plugin.Unloading:Connect(function()
 end)
 
 local settings = Settings(plugin, maid, {
-	resolution = 100,
+	resolution = 11,
 	budget     = 10000,
 	updates    = 60,
 	source     = [[
 return function(r: Random)
-    local a = r:NextNumber(1,6)
-    local b = r:NextNumber(1,6)
+	-- Roll two dice (2d6)
+    local a = r:NextInteger(1,6)
+    local b = r:NextInteger(1,6)
     return a+b
 end]]
 })

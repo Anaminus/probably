@@ -7,8 +7,8 @@
 			"Fusion": {
 				"$path": "lib/Fusion"
 			},
-			"widgets": {
-				"$path": "lib/widgets"
+			"PluginEssentials": {
+				"$path": "lib/PluginEssentials"
 			},
 			"Lattice": {
 				"$path": "lib/Lattice"

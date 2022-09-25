@@ -14,13 +14,13 @@ local Out = Fusion.Out
 local Computed = Fusion.Computed
 local Observer = Fusion.Observer
 
-local PluginWidgets = root.lib.widgets.PluginComponents
+local PluginWidgets = root.lib.PluginEssentials.PluginComponents
 local Toolbar = require(PluginWidgets.Toolbar)
 local ToolbarButton = require(PluginWidgets.ToolbarButton)
 local Widget = require(PluginWidgets.Widget)
 
-local StudioWidgets = root.lib.widgets.StudioComponents
-local Util = root.lib.widgets.StudioComponents.Util
+local StudioWidgets = root.lib.PluginEssentials.StudioComponents
+local Util = root.lib.PluginEssentials.StudioComponents.Util
 local Background = require(StudioWidgets.Background)
 local BaseButton = require(StudioWidgets.BaseButton)
 local BoxBorder = require(StudioWidgets.BoxBorder)

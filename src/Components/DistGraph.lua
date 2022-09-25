@@ -9,8 +9,8 @@ local Computed = Fusion.Computed
 local Value = Fusion.Value
 local Out = Fusion.Out
 
-local StudioWidgets = root.lib.widgets.StudioComponents
-local Util = root.lib.widgets.StudioComponents.Util
+local StudioWidgets = root.lib.PluginEssentials.StudioComponents
+local Util = root.lib.PluginEssentials.StudioComponents.Util
 local Background = require(StudioWidgets.Background)
 local BoxBorder = require(StudioWidgets.BoxBorder)
 local Label = require(StudioWidgets.Label)

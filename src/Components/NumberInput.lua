@@ -4,7 +4,7 @@ local Fusion = require(root.lib.Fusion)
 local OnEvent = Fusion.OnEvent
 local OnChange = Fusion.OnChange
 
-local StudioWidgets = root.lib.widgets.StudioComponents
+local StudioWidgets = root.lib.PluginEssentials.StudioComponents
 local TextInput = require(StudioWidgets.TextInput)
 
 local function NumberInput(value)

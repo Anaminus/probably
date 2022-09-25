@@ -5,7 +5,7 @@ local New = Fusion.New
 local Hydrate = Fusion.Hydrate
 local Children = Fusion.Children
 
-local StudioWidgets = root.lib.widgets.StudioComponents
+local StudioWidgets = root.lib.PluginEssentials.StudioComponents
 local Label = require(StudioWidgets.Label)
 
 local function Field(props)

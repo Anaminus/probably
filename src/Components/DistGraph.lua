@@ -212,7 +212,7 @@ local function DistGraph(opt: DistGraphOptions)
 
 	function self:BucketIndex(value: number)
 		local res = resolution:get()
-		local i = math.floor((value-fastLower)/(fastUpper-fastLower)*(res-1))+1
+		local i = math.floor((value-fastLower)*(res-1)/(fastUpper-fastLower))+1
 		if dataCount[i] == nil then
 			error(string.format("%g %d %g %g", value, i, fastLower, fastUpper))
 		end

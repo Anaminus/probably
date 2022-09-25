@@ -2,6 +2,13 @@
 	"name": "Probably",
 	"tree": {
 		"$path": "src",
+		"$properties": {
+			"Attributes": {
+				"Version": {
+					"String": "1.0"
+				}
+			}
+		},
 		"lib": {
 			"$className": "Folder",
 			"Fusion": {

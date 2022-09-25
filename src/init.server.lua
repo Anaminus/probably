@@ -1,5 +1,3 @@
-local VERSION = "1.0"
-
 local root = script
 
 local Asset = require(root.Asset)
@@ -383,7 +381,7 @@ Widget{
 								Size = UDim2.fromScale(0, 0),
 							},
 							Label{
-								Text = "v" .. VERSION,
+								Text = "v" .. (script:GetAttribute("Version") or "DEV"),
 								TextXAlignment = Enum.TextXAlignment.Left,
 								TextYAlignment = Enum.TextYAlignment.Bottom,
 								TextSize = textSize,

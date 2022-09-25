@@ -67,7 +67,7 @@ local settings = Settings(plugin, maid, {
 	updates    = 60,
 	source     = [[
 return function(r: Random)
-	-- Roll two dice (2d6)
+    -- Roll two dice (2d6)
     local a = r:NextInteger(1,6)
     local b = r:NextInteger(1,6)
     return a+b

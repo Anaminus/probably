@@ -37,7 +37,9 @@ local function DistGraph(opt: DistGraphOptions)
 	local fastPeak = 0
 	local fastTotal = 0
 	local highlightedIndex: number? = nil
-	local data = {}
+	local dataCount = {}
+	local dataLower = {}
+	local dataUpper = {}
 	local dataFrames = {}
 
 	local graphFrame: GuiObject
@@ -67,7 +69,9 @@ local function DistGraph(opt: DistGraphOptions)
 		if res == #dataFrames then
 			return
 		end
-		data = table.create(res, 0)
+		dataCount = table.create(res, 0)
+		dataLower = table.create(res, math.huge)
+		dataUpper = table.create(res, -math.huge)
 		if res < #dataFrames then
 			for i = res+1, #dataFrames do
 				dataFrames[i]:Destroy()
@@ -109,12 +113,30 @@ local function DistGraph(opt: DistGraphOptions)
 		end),
 	}
 
+	function self:UpdateLabel()
+		if highlightedIndex then
+			local count = dataCount[highlightedIndex]
+			if count then
+				local lower = dataLower[highlightedIndex]
+				local upper = dataUpper[highlightedIndex]
+				local prob = count/fastTotal*100
+				if lower == math.huge or upper == -math.huge then
+					dataLabel.Text = string.format("%.2f%%", prob)
+				elseif lower == upper then
+					dataLabel.Text = string.format("%.2f%%\n%g", prob, lower)
+				else
+					dataLabel.Text = string.format("%.2f%%\n%g–%g", prob, lower, upper)
+				end
+			end
+		end
+	end
+
 	function self:Render()
 		local res = resolution:get()
 		lower:set(fastLower)
 		upper:set(fastUpper)
 		for i, frame in dataFrames do
-			local v = data[i]
+			local v = dataCount[i]
 			frame.Size = UDim2.new(1/res,0,v/fastPeak,0)
 		end
 		if fastTotal == 0 then
@@ -122,12 +144,7 @@ local function DistGraph(opt: DistGraphOptions)
 		else
 			peak:set(fastPeak/fastTotal)
 		end
-		if highlightedIndex then
-			local value = data[highlightedIndex]
-			if value then
-				dataLabel.Text = string.format("%.2f%%", value/fastTotal*100)
-			end
-		end
+		self:UpdateLabel()
 	end
 
 	function self:RenderHover(position: Vector2?)
@@ -157,13 +174,13 @@ local function DistGraph(opt: DistGraphOptions)
 
 		dataLabel.Visible = true
 		dataLabel.Position = UDim2.fromOffset(pos.X, pos.Y)
-		dataLabel.Text = string.format("%.2f%%", data[highlightedIndex]/fastTotal*100)
 		frame.BackgroundColor3 = dataHoverColor:get()
+		self:UpdateLabel()
 	end
 
 	function self:Reset()
-		for i in data do
-			data[i] = 0
+		for i in dataCount do
+			dataCount[i] = 0
 		end
 		fastPeak = 0
 		fastTotal = 0
@@ -172,6 +189,10 @@ local function DistGraph(opt: DistGraphOptions)
 	function self:ResetBounds()
 		fastLower = math.huge
 		fastUpper = -math.huge
+		for i in dataCount do
+			dataLower[i] = math.huge
+			dataUpper[i] = -math.huge
+		end
 	end
 
 	function self:UpdateBounds(value: number)
@@ -189,19 +210,30 @@ local function DistGraph(opt: DistGraphOptions)
 		end
 	end
 
+	function self:BucketIndex(value: number)
+		local res = resolution:get()
+		local i = math.floor((value-fastLower)/(fastUpper-fastLower)*(res-1))+1
+		if dataCount[i] == nil then
+			error(string.format("%g %d %g %g", value, i, fastLower, fastUpper))
+		end
+		return i
+	end
+
 	function self:AddSample(value: number)
 		self:UpdateBounds(value)
-		local res = resolution:get()
-		if res > 0 and fastLower < fastUpper then
-			local i = math.round((value-fastLower)/(fastUpper-fastLower)*(res-1))+1
-			if data[i] == nil then
-				error(string.format("%g %d %g %g", value, i, fastLower, fastUpper))
-			end
-			local n = data[i] + 1
-			data[i] = n
+		if resolution:get() > 0 and fastLower < fastUpper then
+			local i = self:BucketIndex(value)
+			local n = dataCount[i] + 1
+			dataCount[i] = n
 			fastTotal += 1
 			if n > fastPeak then
 				fastPeak = n
+			end
+			if value < dataLower[i] then
+				dataLower[i] = value
+			end
+			if value > dataUpper[i] then
+				dataUpper[i] = value
 			end
 		end
 	end

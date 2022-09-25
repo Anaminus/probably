@@ -193,7 +193,7 @@ local function DistGraph(opt: DistGraphOptions)
 		self:UpdateBounds(value)
 		local res = resolution:get()
 		if res > 0 and fastMinX < fastMaxX then
-			local i = math.floor((value-fastMinX)/(fastMaxX-fastMinX)*(res-1))+1
+			local i = math.round((value-fastMinX)/(fastMaxX-fastMinX)*(res-1))+1
 			if data[i] == nil then
 				error(string.format("%g %d %g %g", value, i, fastMinX, fastMaxX))
 			end

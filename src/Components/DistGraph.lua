@@ -32,9 +32,9 @@ export type DistGraphOptions = {
 local function DistGraph(opt: DistGraphOptions)
 	local maid: cleanup.Tasks = {}
 
-	local fastMinX = math.huge
-	local fastMaxX = -math.huge
-	local fastMaxY = 0
+	local fastLower = math.huge
+	local fastUpper = -math.huge
+	local fastPeak = 0
 	local fastTotal = 0
 	local highlightedIndex: number? = nil
 	local data = {}
@@ -111,16 +111,16 @@ local function DistGraph(opt: DistGraphOptions)
 
 	function self:Render()
 		local res = resolution:get()
-		lower:set(fastMinX)
-		upper:set(fastMaxX)
+		lower:set(fastLower)
+		upper:set(fastUpper)
 		for i, frame in dataFrames do
 			local v = data[i]
-			frame.Size = UDim2.new(1/res,0,v/fastMaxY,0)
+			frame.Size = UDim2.new(1/res,0,v/fastPeak,0)
 		end
 		if fastTotal == 0 then
 			peak:set(0)
 		else
-			peak:set(fastMaxY/fastTotal)
+			peak:set(fastPeak/fastTotal)
 		end
 		if highlightedIndex then
 			local value = data[highlightedIndex]
@@ -165,23 +165,23 @@ local function DistGraph(opt: DistGraphOptions)
 		for i in data do
 			data[i] = 0
 		end
-		fastMaxY = 0
+		fastPeak = 0
 		fastTotal = 0
 	end
 
 	function self:ResetBounds()
-		fastMinX = math.huge
-		fastMaxX = -math.huge
+		fastLower = math.huge
+		fastUpper = -math.huge
 	end
 
 	function self:UpdateBounds(value: number)
 		local reset = false
-		if value < fastMinX then
-			fastMinX = value
+		if value < fastLower then
+			fastLower = value
 			reset = true
 		end
-		if value > fastMaxX then
-			fastMaxX = value
+		if value > fastUpper then
+			fastUpper = value
 			reset = true
 		end
 		if reset then
@@ -192,16 +192,16 @@ local function DistGraph(opt: DistGraphOptions)
 	function self:AddSample(value: number)
 		self:UpdateBounds(value)
 		local res = resolution:get()
-		if res > 0 and fastMinX < fastMaxX then
-			local i = math.round((value-fastMinX)/(fastMaxX-fastMinX)*(res-1))+1
+		if res > 0 and fastLower < fastUpper then
+			local i = math.round((value-fastLower)/(fastUpper-fastLower)*(res-1))+1
 			if data[i] == nil then
-				error(string.format("%g %d %g %g", value, i, fastMinX, fastMaxX))
+				error(string.format("%g %d %g %g", value, i, fastLower, fastUpper))
 			end
 			local n = data[i] + 1
 			data[i] = n
 			fastTotal += 1
-			if n > fastMaxY then
-				fastMaxY = n
+			if n > fastPeak then
+				fastPeak = n
 			end
 		end
 	end

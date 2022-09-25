@@ -125,7 +125,7 @@ local function DistGraph(opt: DistGraphOptions)
 				elseif lower == upper then
 					dataLabel.Text = string.format("%.2f%%\n%g", prob, lower)
 				else
-					dataLabel.Text = string.format("%.2f%%\n%g–%g", prob, lower, upper)
+					dataLabel.Text = string.format("%.2f%%\n%g to %g", prob, lower, upper)
 				end
 			end
 		end

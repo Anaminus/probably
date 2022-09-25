@@ -61,7 +61,7 @@ bar represents. A bar has several ways to display values:
   observed.
 - Single (`A`): The bar represents the single value `A`. Likely to occur with
   integer results.
-- Range (`A–B`): The bar represents a range of values between `A` and `B`.
+- Range (`A to B`): The bar represents a range of values between `A` and `B`.
 
 ### Editor
 The Editor displays the source of the distribution function. While running, the

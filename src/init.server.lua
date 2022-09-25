@@ -67,6 +67,12 @@ local settings = Settings(plugin, maid, {
 	resolution = 100,
 	budget     = 10000,
 	updates    = 60,
+	source     = [[
+return function(r: Random)
+    local a = r:NextNumber(1,6)
+    local b = r:NextNumber(1,6)
+    return a+b
+end]]
 })
 
 local lower = Value(math.huge)
@@ -102,10 +108,9 @@ local function sample(random, bounds)
 	end
 end
 
-local source = Value("")
 local errorMessage = Value("")
-maid.source = Observer(source):onChange(function()
-	local source = source:get()
+local function updateSource()
+	local source = settings.source:get()
 	local ok, func, err = pcall(loadstring, source, "dist")
 	if not ok then
 		errorMessage:set(func)
@@ -133,7 +138,9 @@ maid.source = Observer(source):onChange(function()
 	-- Attempt to find lower and upper bounds early.
 	sample(randomMin, true)
 	sample(randomMax, true)
-end)
+end
+maid.source = Observer(settings.source):onChange(updateSource)
+updateSource()
 
 local running = Value(false)
 local rid = 0
@@ -299,8 +306,8 @@ Widget{
 						TextXAlignment = Enum.TextXAlignment.Left,
 						TextYAlignment = Enum.TextYAlignment.Top,
 						TextWrapped = false,
-						Text = source,
-						[Out "Text"] = source,
+						Text = settings.source,
+						[Out "Text"] = settings.source,
 					}),
 					Lattice.cell(2,2, 1,1, BoxBorder{
 						[Children] = Background {
@@ -458,10 +465,3 @@ A plugin for displaying the probability distributions of Luau functions.
 		},
 	},
 }
-
-source:set([[
-return function(r: Random)
-    local a = r:NextNumber(1,6)
-    local b = r:NextNumber(1,6)
-    return a+b
-end]])

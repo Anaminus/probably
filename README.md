@@ -35,11 +35,12 @@ The window has several panels:
   source.
 
 ### Top bar
-In the Top bar are two buttons:
+In the Top bar are three buttons:
 
 - **Play/Pause**: Toggles sampling. While running, the distribution function is
   continuously called, and the results are displayed on the Graph.
 - **Reset**: Removes all results.
+- **About**: Displays a panel containing information about the plugin.
 
 ### Graph
 The Graph displays the results of sampling as a bar graph. Results are added to
@@ -49,17 +50,27 @@ largest bucket.
 The X axis displays the minimum and maximum values that have been observed. The
 Y axis displays the probability of the largest bucket.
 
-The results of the sampling are discarded whenever a new minimum or maximum
-value is discovered. This can cause the graph to jump or jitter.
+In order to display properly, the results of the sampling are discarded whenever
+a new minimum or maximum value is discovered. This can cause the graph to jump
+or jitter.
+
+Hovering over a bar will display the probability for the bar, and the values the
+bar represents. A bar has several ways to display values:
+
+- None: Displays no value, meaning that no samples in this range have been
+  observed.
+- Single (`A`): The bar represents the single value `A`. Likely to occur with
+  integer results.
+- Range (`A–B`): The bar represents a range of values between `A` and `B`.
 
 ### Editor
-The Editor displays the source of the distribution function. This source can be
-edited. While running, the Graph will be updated live.
+The Editor displays the source of the distribution function. While running, the
+Graph will be updated live as the source is edited.
 
 The source is expected to return a function. This function will be called
 continuously while the plugin is running. The function recieves a Random value,
-and must return a number. Non-numbers and NaN values are discarded. The function
-should avoid having side-effects.
+and must return a number. Non-number types, infinities, and NaN values are
+discarded. The function should avoid having side-effects.
 
 The source is executed only whenever it changes. If the source or function
 contains an error, then the previous function will continue to be used until
@@ -68,16 +79,14 @@ there is no longer an error.
 ### Options
 There are several options for configuring the plugin:
 
-- **Resolution**: The number of buckets into which results will be distributed.
+- **Resolution**: The number of buckets (or bars) into which results will be
+  distributed.
 - **Budget**: Amount of time, per frame, that should be dedicated to sampling,
   in microseconds.
 - **Updates**: The number of times the graph should be updated, per second.
 
 # Permissions
 Probably requires **no** permissions to operate.
-
-*Note: To operate correctly in Run mode, ServerScriptService.LoadStringEnabled
-must be set to true.*
 
 # Building
 If cloning the repository, ensure that submodules are downloaded:

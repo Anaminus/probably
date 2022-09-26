@@ -68,13 +68,14 @@ The Editor displays the source of the distribution function. While running, the
 Graph will be updated live as the source is edited.
 
 The source is expected to return a function. This function will be called
-continuously while the plugin is running. The function recieves a Random value,
+continuously while the plugin is running. The function receives a Random value,
 and must return a number. Non-number types, infinities, and NaN values are
 discarded. The function should avoid having side-effects.
 
 The source is executed only whenever it changes. If the source or function
 contains an error, then the previous function will continue to be used until
-there is no longer an error.
+there is no longer an error. Any errors will be displayed in the bottom right
+corner.
 
 ### Options
 There are several options for configuring the plugin:
